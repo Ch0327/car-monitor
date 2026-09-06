@@ -1,32 +1,32 @@
 name: Build APK
-
 on:
   push:
     branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu‑latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 11
-        uses: actions/setup-java@v5
+        uses: actions/setup‑java@v5
         with:
-          java-version: '11'
+          java‑version: '11'
           distribution: 'temurin'
 
-      - name: Generate gradlew wrapper
+      # 自动生成完整 gradlew + jar，不需要手动上传gradlew文件
+      - name: Setup Gradle Wrapper
         run: |
-          ./gradle/wrapper/gradle-wrapper.jar --version || true
-          chmod +x gradlew || true
+          ./gradlew || gradle wrapper --gradle-version 7.5
+          chmod +x gradlew
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload‑artifact@v4
         with:
-          name: android-apk
+          name: android‑apk
           path: app/build/outputs/apk/debug/*.apk
