@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.chuhe">
 
-    <!-- 硬件与网络权限（摄像头、TF卡存储） -->
+    <!-- 硬件与网络权限 -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -12,11 +12,10 @@
 
     <application
         android:allowBackup="true"
-        android:label="@string/app_name"
+        android:label="锄禾"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Chuhe">
+        android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         
-        <!-- 强制横屏，适配9寸 1024*600 -->
         <activity
             android:name=".MainActivity"
             android:screenOrientation="landscape"
