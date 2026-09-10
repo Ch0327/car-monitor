@@ -5,14 +5,26 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.quectel.qcarapi.QCarCamera;
-
 public class MainActivity extends Activity {
+
+    // 直接在内部声明厂家的底层驱动方法，避免多文件夹路径出错
+    public static class QCarCamera {
+        static {
+            System.loadLibrary("mmqcar_qcar_jni");
+        }
+        public native int cameraOpen(int csi, int channel, int flag);
+        public native int cameraClose(int csi, int channel);
+        public native int setVideoSize(int csi, int channel, int width, int height);
+        public native int setFps(int csi, int channel, int fps);
+        public native int startPreview(int csi, int channel, Surface surface);
+        public native int stopPreview(int csi, int channel);
+    }
 
     private QCarCamera mCameraAPI;
     private SurfaceView[] surfaceViews = new SurfaceView[4];
@@ -64,7 +76,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void startAHDCamera(int channel, android.view.Surface surface) {
+    private void startAHDCamera(int channel, Surface surface) {
         new Thread(() -> {
             int csiNum = 0;
             mCameraAPI.cameraOpen(csiNum, channel, 0);
