@@ -13,7 +13,7 @@ import android.view.WindowManager;
 
 public class MainActivity extends Activity {
 
-    // 直接在内部声明厂家的底层驱动方法，避免多文件夹路径出错
+    // 内部集成的底层相机驱动类，完美避开多文件编译报错
     public static class QCarCamera {
         static {
             System.loadLibrary("mmqcar_qcar_jni");
