@@ -1,48 +1,76 @@
-package com.chuhe;
+package com.example.carmonitor;
 
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.view.TextureView;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.Window;
+import android.view.WindowManager;
+
+import com.quectel.qcarapi.QCarCamera;
 
 public class MainActivity extends Activity {
-    private TextureView preview1, preview2;
+
+    private QCarCamera mCameraAPI;
+    private SurfaceView[] surfaceViews = new SurfaceView[4];
+    private boolean[] isSurfaceReady = new boolean[4];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // 终极解法：纯代码直接创建全屏双画面界面，彻底杜绝 XML 文件丢失导致的报错
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.HORIZONTAL);
-        layout.setBackgroundColor(0xFF000000); // 黑色背景
-        layout.setWeightSum(2f);
-        
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f);
-        params.setMargins(2, 2, 2, 2);
-        
-        preview1 = new TextureView(this);
-        preview1.setLayoutParams(params);
-        layout.addView(preview1);
-        
-        preview2 = new TextureView(this);
-        preview2.setLayoutParams(params);
-        layout.addView(preview2);
-        
-        // 直接显示纯代码创建的界面
-        setContentView(layout);
-        
-        // 申请必备权限
-        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{
-                Manifest.permission.CAMERA, 
-                Manifest.permission.WRITE_EXTERNAL_STORAGE, 
-                Manifest.permission.RECORD_AUDIO
-            }, 100);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setContentView(R.layout.activity_main);
+
+        mCameraAPI = new QCarCamera();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+            }
         }
+
+        initSurfaces();
+    }
+
+    private void initSurfaces() {
+        surfaceViews[0] = findViewById(R.id.surfaceView0);
+        surfaceViews[1] = findViewById(R.id.surfaceView1);
+        surfaceViews[2] = findViewById(R.id.surfaceView2);
+        surfaceViews[3] = findViewById(R.id.surfaceView3);
+
+        for (int i = 0; i < 4; i++) {
+            final int channel = i;
+            surfaceViews[i].getHolder().addCallback(new SurfaceHolder.Callback() {
+                @Override
+                public void surfaceCreated(SurfaceHolder holder) {
+                    isSurfaceReady[channel] = true;
+                    startAHDCamera(channel, holder.getSurface());
+                }
+
+                @Override
+                public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
+
+                @Override
+                public void surfaceDestroyed(SurfaceHolder holder) {
+                    isSurfaceReady[channel] = false;
+                    mCameraAPI.stopPreview(0, channel);
+                    mCameraAPI.cameraClose(0, channel);
+                }
+            });
+        }
+    }
+
+    private void startAHDCamera(int channel, android.view.Surface surface) {
+        new Thread(() -> {
+            int csiNum = 0;
+            mCameraAPI.cameraOpen(csiNum, channel, 0);
+            mCameraAPI.setVideoSize(csiNum, channel, 1280, 720);
+            mCameraAPI.setFps(csiNum, channel, 25);
+            mCameraAPI.startPreview(csiNum, channel, surface);
+        }).start();
     }
 }
